@@ -1,48 +1,110 @@
 import { useState } from "react";
 import { css } from "@emotion/react";
+// import Tile from "./components/tile";
 import "./App.css";
 
 function App() {
   // State  -------------------------------------------------
-  const [cards, setCard] = useState([{ id: 1, titleValue: "default" }]);
+  const [arrTiles, setArrTiles] = useState([]); //For managing Tiles
+  const [text, setText] = useState(""); //For Character Counter
+  const [sort, setSort] = useState(0); //For Character Counter
 
   // CRUD Operations and Handlers ---------------------------
+  // Create
   const handleCreateCard = () => {
-    const newCard = {
-      id: cards.length ? Math.max(...cards.map((card) => card.id)) + 1 : 1,
-      titleValue: "New Card", // Or get content from a form, for example
-    };
-    setCard([...cards, newCard]);
-  };
+    const newTimeStamp = new Date();
+    let createTimeStamp = newTimeStamp.toLocaleTimeString();
 
-  // Read (Select)
-  const getCardById = (cardId) => {
-    const card = cards.find((card) => card.id === cardId);
-    return card ? card : null; // Return item or null if not found
+    const newTile = {
+      id: arrTiles.length
+        ? Math.max(...arrTiles.map((tile) => tile.id)) + 1
+        : 1,
+      titleValue: "New Card",
+      createdAt: createTimeStamp,
+      textLength: 0,
+    };
+    setArrTiles([...arrTiles, newTile]);
   };
 
   // Update
-  //   const updateCard = (updatedCard) => {
-  //     const index = cards.findIndex((card) => card.id === updatedCard.id);
-  //     if (index > -1) {
-  //       cards[index] = updatedCard;
-  //       console.log("Updated card:", updatedCard);
-  //     } else {
-  //       console.error("Card not found for update:", updatedCard.id);
-  //     }
-  //   };
-  const handleTitleChange = (event) => {
-    cards.titleValue = event.target.value;
+  // Function to update Character Count and Time Stamps onChange
+  const handleDescriptionChange = (event, tileId) => {
+    const newText = event.target.value;
+    const charCount = newText.length;
+    // Update the text state variable
+    setText(newText);
+    setArrTiles((prevArrTiles) => {
+      // Create a copy of the previous array
+      const updatedArrTiles = [...prevArrTiles];
+      // Update the textLength property of the specific tile ---- Character Count Updating Function
+      updatedArrTiles[tileId - 1].textLength = charCount;
+      // Update the createdAt property of the specific tile   ---- Time Stamp Updating
+      updatedArrTiles[tileId - 1].createdAt = new Date().toLocaleTimeString();
+      // Return the updated array to be set as the new state
+      return updatedArrTiles;
+    });
   };
-  // Delete
-  const handleDeleteCard = (cardId) => {
-    const updatedCards = cards.filter((card) => card.id !== cardId);
-    setCard(updatedCards);
+  // Function to update Title in state onChange to prep for Sort
+  const handleTitleChange = (event, tileId) => {
+    const newText = event.target.value;
+    setArrTiles((prevArrTiles) => {
+      // Create a copy of the previous array
+      const updatedArrTiles = [...prevArrTiles];
+      console.log(updatedArrTiles);
+      // Update the createdAt property of the specific tile   ---- Time Stamp Updating
+      updatedArrTiles[tileId - 1].titleValue = newText;
+      // Return the updated array to be set as the new state
+      return updatedArrTiles;
+    });
   };
 
+  // Delete
+  const handleDeleteTile = (tileId) => {
+    const updatedTiles = arrTiles.filter((tile) => tile.id !== tileId);
+    setArrTiles(updatedTiles);
+  };
+
+  // Sorting Functions ---------------------------
+  const handleSortAZ = () => {
+    setArrTiles((prevArrTiles) => {
+      const sortedArrTiles = [...prevArrTiles];
+      if (sort == true) {
+        setSort(false);
+        // Sort the array by title in descending order (A-Z)
+        sortedArrTiles.sort((a, b) => {
+          if (a.titleValue > b.titleValue) return -1;
+          if (a.titleValue < b.titleValue) return 1;
+          return 0;
+        });
+      } else {
+        setSort(true);
+        // Sort the array by title in ascending order (A-Z)
+        sortedArrTiles.sort((a, b) => {
+          if (a.titleValue < b.titleValue) return -1;
+          if (a.titleValue > b.titleValue) return 1;
+          return 0;
+        });
+      }
+      console.log(sortedArrTiles);
+      return sortedArrTiles;
+    });
+  };
+
+  //  ------------------------------------------------------
   return (
     <div>
-      <button onClick={handleCreateCard}>Create New Card</button>
+      <div
+        css={css`
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: space-evenly;
+        `}
+      >
+        <button onClick={handleCreateCard}>Create New Card</button>
+        <button onClick={handleSortAZ}>Sort A-Z</button>
+        <button>Sort by Newest</button>
+      </div>
       <div
         className="card-container"
         css={css`
@@ -53,8 +115,13 @@ function App() {
           justify-content: space-evenly;
         `}
       >
-        {cards.map((card) => (
-          <div key={card.id}>
+        {arrTiles.map((tile) => (
+          <li
+            key={tile.id}
+            css={css`
+              list-style-type: none;
+            `}
+          >
             {
               <div
                 css={css`
@@ -65,7 +132,7 @@ function App() {
                   flex-direction: column;
                   margin: 2em;
                   gap: 1em;
-                  padding: 1em;
+                  padding: 1.5em;
                 `}
               >
                 {
@@ -73,30 +140,58 @@ function App() {
                     <input
                       type="text"
                       placeholder="Title"
-                      value={cards.titleValue}
-                      onChange={handleTitleChange}
+                      onChange={(event) => handleTitleChange(event, tile.id)}
                       css={css`
                         border: none;
                       `}
                       autoFocus
                     ></input>
+
                     <textarea
                       type="text"
                       placeholder="Description"
                       cols={35}
                       rows={5}
                       maxLength="140"
+                      onChange={(event) =>
+                        handleDescriptionChange(event, tile.id)
+                      }
                       css={css`
                         border: none;
                       `}
                     ></textarea>
+
+                    <div
+                      css={css`
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: space-between;
+                      `}
+                    >
+                      {" "}
+                      <p
+                        css={css`
+                          font-size: 0.5rem;
+                          color: gray;
+                        `}
+                      >
+                        {tile.createdAt}
+                      </p>
+                      <p
+                        css={css`
+                          font-size: 0.5rem;
+                          color: gray;
+                        `}
+                      >
+                        {tile.textLength}/140
+                      </p>
+                    </div>
+
                     <button
                       onClick={() => {
-                        handleDeleteCard(card.id);
+                        handleDeleteTile(tile.id);
+                        // console.log(tile.id);
                       }}
-                      css={css`
-                        //   height: 2em;
-                      `}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -113,7 +208,7 @@ function App() {
                 }
               </div>
             }
-          </div>
+          </li>
         ))}
       </div>
     </div>
