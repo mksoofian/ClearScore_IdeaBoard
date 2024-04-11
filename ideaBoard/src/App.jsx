@@ -7,7 +7,8 @@ function App() {
   // State  -------------------------------------------------
   const [arrTiles, setArrTiles] = useState([]); //For managing Tiles
   const [text, setText] = useState(""); //For Character Counter
-  const [sort, setSort] = useState(0); //For Character Counter
+  const [sortAz, setSortAz] = useState(0); //For Alphabetic Sorting Function
+  const [sortDate, setSortDate] = useState(0); //For Date Sorting Function
 
   // CRUD Operations and Handlers ---------------------------
   // Create
@@ -20,7 +21,7 @@ function App() {
         ? Math.max(...arrTiles.map((tile) => tile.id)) + 1
         : 1,
       titleValue: "New Card",
-      createdAt: createTimeStamp,
+      createdAt: `Created at: ${createTimeStamp}`,
       textLength: 0,
     };
     setArrTiles([...arrTiles, newTile]);
@@ -39,12 +40,14 @@ function App() {
       // Update the textLength property of the specific tile ---- Character Count Updating Function
       updatedArrTiles[tileId - 1].textLength = charCount;
       // Update the createdAt property of the specific tile   ---- Time Stamp Updating
-      updatedArrTiles[tileId - 1].createdAt = new Date().toLocaleTimeString();
+      updatedArrTiles[
+        tileId - 1
+      ].createdAt = `Updated at: ${new Date().toLocaleTimeString()}`;
       // Return the updated array to be set as the new state
       return updatedArrTiles;
     });
   };
-  // Function to update Title in state onChange to prep for Sort
+  // Function to update Title in state onChange to prep for Sorting Titles Alphabetically
   const handleTitleChange = (event, tileId) => {
     const newText = event.target.value;
     setArrTiles((prevArrTiles) => {
@@ -68,8 +71,8 @@ function App() {
   const handleSortAZ = () => {
     setArrTiles((prevArrTiles) => {
       const sortedArrTiles = [...prevArrTiles];
-      if (sort == true) {
-        setSort(false);
+      if (sortAz == true) {
+        setSortAz(false);
         // Sort the array by title in descending order (A-Z)
         sortedArrTiles.sort((a, b) => {
           if (a.titleValue > b.titleValue) return -1;
@@ -77,7 +80,7 @@ function App() {
           return 0;
         });
       } else {
-        setSort(true);
+        setSortAz(true);
         // Sort the array by title in ascending order (A-Z)
         sortedArrTiles.sort((a, b) => {
           if (a.titleValue < b.titleValue) return -1;
@@ -85,7 +88,29 @@ function App() {
           return 0;
         });
       }
-      console.log(sortedArrTiles);
+      return sortedArrTiles;
+    });
+  };
+  const handleSort09 = () => {
+    setArrTiles((prevArrTiles) => {
+      const sortedArrTiles = [...prevArrTiles];
+      if (sortDate == true) {
+        setSortDate(false);
+        // Sort the array by Time in descending order (A-Z)
+        sortedArrTiles.sort((a, b) => {
+          if (a.createdAt > b.createdAt) return -1;
+          if (a.createdAt < b.createdAt) return 1;
+          return 0;
+        });
+      } else {
+        setSortDate(true);
+        // Sort the array by Time in ascending order (A-Z)
+        sortedArrTiles.sort((a, b) => {
+          if (a.createdAt < b.createdAt) return -1;
+          if (a.createdAt > b.createdAt) return 1;
+          return 0;
+        });
+      }
       return sortedArrTiles;
     });
   };
@@ -102,8 +127,31 @@ function App() {
         `}
       >
         <button onClick={handleCreateCard}>Create New Card</button>
-        <button onClick={handleSortAZ}>Sort A-Z</button>
-        <button>Sort by Newest</button>
+        <div
+          css={css`
+            border: none;
+            border-radius: 1em;
+            padding: 0.5em;
+          `}
+        >
+          {" "}
+          <button
+            onClick={handleSortAZ}
+            css={css`
+              border-radius: 1em 0 0 1em;
+            `}
+          >
+            Sort A-Z
+          </button>
+          <button
+            onClick={handleSort09}
+            css={css`
+              border-radius: 0 1em 1em 0;
+            `}
+          >
+            Sort by Date
+          </button>
+        </div>
       </div>
       <div
         className="card-container"
@@ -143,6 +191,8 @@ function App() {
                       onChange={(event) => handleTitleChange(event, tile.id)}
                       css={css`
                         border: none;
+                        border-radius: 1em;
+                        padding: 0.5em;
                       `}
                       autoFocus
                     ></input>
@@ -158,6 +208,8 @@ function App() {
                       }
                       css={css`
                         border: none;
+                        border-radius: 1em;
+                        padding: 0.5em;
                       `}
                     ></textarea>
 
