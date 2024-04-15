@@ -61,8 +61,6 @@ function App() {
       const updatedArrTiles = [...prevArrTiles];
       // Update the textLength property of the specific tile ---- Character Count Updating Function
       updatedArrTiles[tileId - 1].textLength = charCount;
-      // Update the CharCount color to alert user approaching limit ---- Character Count Alert Function
-      charCount >= 130; // Charcount
       // Update the createdAt property of the specific tile   ---- Time Stamp Updating
       updatedArrTiles[
         tileId - 1
