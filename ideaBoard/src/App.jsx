@@ -1,14 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { css } from "@emotion/react";
 // import Tile from "./components/tile";
 import "./App.css";
 
 function App() {
-  // State  -------------------------------------------------
+  // Initialization  ------------------------------------------------------------
+  // Load data from localStorage on initial render
+  useEffect(() => {
+    const storedTiles = JSON.parse(localStorage.getItem("arrTiles"));
+    if (storedTiles) {
+      setArrTiles(storedTiles);
+      console.log(
+        `Stored Tiles! ${JSON.stringify(localStorage.getItem("arrTiles"))}`
+      );
+    }
+  }, []);
+
+  // State  ------------------------------------------------------------
   const [arrTiles, setArrTiles] = useState([]); //For managing Tiles
   const [text, setText] = useState(""); //For Character Counter
   const [sortAz, setSortAz] = useState(0); //For Alphabetic Sorting Function
   const [sortDate, setSortDate] = useState(0); //For Date Sorting Function
+
+  // Save the updated tiles to local storage whenever arrTiles changes
+  useEffect(() => {
+    localStorage.setItem("arrTiles", JSON.stringify(arrTiles));
+    console.log(
+      `Setting arrTiles ${JSON.stringify(localStorage.getItem("arrTiles"))}`
+    );
+  }, [arrTiles]);
 
   // CRUD Operations and Handlers ---------------------------
   // Create
@@ -25,10 +45,12 @@ function App() {
       textLength: 0,
     };
     setArrTiles([...arrTiles, newTile]);
+    // Save the updated tiles to local storage
+    localStorage.setItem("arrTiles", JSON.stringify(arrTiles));
   };
 
   // Update
-  // Function to update Character Count and Time Stamps onChange
+  // Function to update Character Count + Time Stamps onChange + Animation Alerts
   const handleDescriptionChange = (event, tileId) => {
     const newText = event.target.value;
     const charCount = newText.length;
@@ -39,10 +61,30 @@ function App() {
       const updatedArrTiles = [...prevArrTiles];
       // Update the textLength property of the specific tile ---- Character Count Updating Function
       updatedArrTiles[tileId - 1].textLength = charCount;
+      // Update the CharCount color to alert user approaching limit ---- Character Count Alert Function
+      charCount >= 130; // Charcount
       // Update the createdAt property of the specific tile   ---- Time Stamp Updating
       updatedArrTiles[
         tileId - 1
       ].createdAt = `Updated at: ${new Date().toLocaleTimeString()}`;
+
+      // Animate the text color change   ---- Time Stamp Alert Updating
+      const targetTimeStamp = document.getElementById(`timeStamp_${tileId}`);
+      if (targetTimeStamp) {
+        targetTimeStamp.style.transition = "background-color 2s ease-in-out"; // Set transition properties
+        targetTimeStamp.style.backgroundColor = "yellow"; // Initial color before animation
+        setTimeout(() => {
+          targetTimeStamp.style.backgroundColor = "initial"; // Final color after animation
+        }, 1500); // Matches the transition duration
+      }
+      // Animate the text color change   ---- Character Count Alert Updating
+      const targetCharCounter = document.getElementById(
+        `charCounterLimit_${tileId}`
+      );
+      if (targetCharCounter && charCount >= 130) {
+        targetCharCounter.style.color = "red"; // Set alert text color
+      } else targetCharCounter.style.color = "inherit"; // Revert to correct font-color
+
       // Return the updated array to be set as the new state
       return updatedArrTiles;
     });
@@ -53,9 +95,21 @@ function App() {
     setArrTiles((prevArrTiles) => {
       // Create a copy of the previous array
       const updatedArrTiles = [...prevArrTiles];
-      console.log(updatedArrTiles);
-      // Update the createdAt property of the specific tile   ---- Time Stamp Updating
+      // Update the titleValue property of the specific tile   ---- Title Updating
       updatedArrTiles[tileId - 1].titleValue = newText;
+      // Update the createdAt property of the specific tile   ---- Time Stamp Updating
+      updatedArrTiles[
+        tileId - 1
+      ].createdAt = `Updated at: ${new Date().toLocaleTimeString()}`;
+      // Animate the text color change   ---- Time Stamp Alert Updating
+      const targetTimeStamp = document.getElementById(`timeStamp_${tileId}`);
+      if (targetTimeStamp) {
+        targetTimeStamp.style.transition = "background-color 2s ease-in-out"; // Set transition properties
+        targetTimeStamp.style.backgroundColor = "yellow"; // Initial color before animation
+        setTimeout(() => {
+          targetTimeStamp.style.backgroundColor = "initial"; // Final color after animation
+        }, 1500); // Matches the transition duration
+      }
       // Return the updated array to be set as the new state
       return updatedArrTiles;
     });
@@ -222,6 +276,7 @@ function App() {
                     >
                       {" "}
                       <p
+                        id={`timeStamp_${tile.id}`}
                         css={css`
                           font-size: 0.5rem;
                           color: gray;
@@ -230,12 +285,13 @@ function App() {
                         {tile.createdAt}
                       </p>
                       <p
+                        id={`charCounterLimit_${tile.id}`}
                         css={css`
                           font-size: 0.5rem;
                           color: gray;
                         `}
                       >
-                        {tile.textLength}/140
+                        {tile.textLength} / 140
                       </p>
                     </div>
 
