@@ -298,7 +298,6 @@ function App() {
                     <button
                       onClick={() => {
                         handleDeleteTile(tile.id);
-                        // console.log(tile.id);
                       }}
                     >
                       <svg
