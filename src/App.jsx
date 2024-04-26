@@ -4,170 +4,112 @@ import { css } from "@emotion/react";
 import "./App.css";
 
 function App() {
-  // Initialization  ------------------------------------------------------------
-  // Load data from localStorage on initial render
-  useEffect(() => {
-    const storedTiles = JSON.parse(localStorage.getItem("arrTiles"));
-    if (storedTiles) {
-      setArrTiles(storedTiles);
-      console.log(
-        `Stored Tiles! ${JSON.stringify(localStorage.getItem("arrTiles"))}`
-      );
-    }
-  }, []);
-
-  // State  ------------------------------------------------------------
+  // ------------------------------------------  State  ---------------------------------------------------
   const [arrTiles, setArrTiles] = useState([]); //For managing Tiles
-  const [text, setText] = useState(""); //For Character Counter
-  const [sortAz, setSortAz] = useState(0); //For Alphabetic Sorting Function
-  const [sortDate, setSortDate] = useState(0); //For Date Sorting Function
+  const [sortAlphaDirection, setSortAlphaDirection] = useState(false); //For  Sorting Function
+  const [sortDateDirection, setSortDateDirection] = useState(false); //For  Sorting Function
+  const [isTimestampAnimating, setIsTimestampAnimating] = useState(false);
 
-  // Save the updated tiles to local storage whenever arrTiles changes
+  //  Resets the Highlighting animation of the handleChange function
   useEffect(() => {
-    localStorage.setItem("arrTiles", JSON.stringify(arrTiles));
-    console.log(
-      `Setting arrTiles ${JSON.stringify(localStorage.getItem("arrTiles"))}`
-    );
-  }, [arrTiles]);
+    if (isTimestampAnimating) {
+      console.log(isTimestampAnimating);
+      const timeoutId = setTimeout(() => setIsTimestampAnimating(false), 1000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isTimestampAnimating]); // Only run when isTimestampAnimating changes
 
-  // CRUD Operations and Handlers ---------------------------
-  // Create
+  // Local Storage API (NOT WORKING)
+  //   // Load data from localStorage on initial render
+  //   useEffect(() => {
+  //     const storedTiles = JSON.parse(localStorage.getItem("arrTiles"));
+  //     if (storedTiles) {
+  //       setArrTiles(storedTiles);
+  //       console.log(
+  //         `Stored Tiles! ${JSON.stringify(localStorage.getItem("arrTiles"))}`
+  //       );
+  //     }
+  //   }, []);
+  //   // Save the updated tiles to local storage whenever arrTiles changes
+  //   useEffect(() => {
+  //     localStorage.setItem("arrTiles", JSON.stringify(arrTiles));
+  //     console.log(
+  //       `Setting arrTiles ${JSON.stringify(localStorage.getItem("arrTiles"))}`
+  //     );
+  //   }, [arrTiles]);
+
+  // ---------------------------------- CRUD Operations and Handlers -----------------------------------
+  // ------------------ Create
   const handleCreateCard = () => {
     const newTimeStamp = new Date();
     let createTimeStamp = newTimeStamp.toLocaleTimeString();
 
     const newTile = {
-      id: arrTiles.length
-        ? Math.max(...arrTiles.map((tile) => tile.id)) + 1
-        : 1,
-      titleValue: "New Card",
-      createdAt: `Created at: ${createTimeStamp}`,
-      textLength: 0,
+      id: arrTiles.length + 1,
+      title: "",
+      description: "",
+      createdAt: createTimeStamp,
+      updatedAt: createTimeStamp, // Creates time stamp for this initial creation for sorting purposes
     };
     setArrTiles([...arrTiles, newTile]);
-    // Save the updated tiles to local storage
-    localStorage.setItem("arrTiles", JSON.stringify(arrTiles));
   };
 
-  // Update
-  // Function to update Character Count + Time Stamps onChange + Animation Alerts
-  const handleDescriptionChange = (event, tileId) => {
-    const newText = event.target.value;
-    const charCount = newText.length;
-    // Update the text state variable
-    setText(newText);
-    setArrTiles((prevArrTiles) => {
-      // Create a copy of the previous array
-      const updatedArrTiles = [...prevArrTiles];
-      // Update the textLength property of the specific tile ---- Character Count Updating Function
-      updatedArrTiles[tileId - 1].textLength = charCount;
-      // Update the createdAt property of the specific tile   ---- Time Stamp Updating
-      updatedArrTiles[
-        tileId - 1
-      ].createdAt = `Updated at: ${new Date().toLocaleTimeString()}`;
-
-      // Animate the text color change   ---- Time Stamp Alert Updating
-      const targetTimeStamp = document.getElementById(`timeStamp_${tileId}`);
-      if (targetTimeStamp) {
-        targetTimeStamp.style.transition = "background-color 2s ease-in-out"; // Set transition properties
-        targetTimeStamp.style.backgroundColor = "yellow"; // Initial color before animation
-        setTimeout(() => {
-          targetTimeStamp.style.backgroundColor = "initial"; // Final color after animation
-        }, 1500); // Matches the transition duration
-      }
-      // Animate the text color change   ---- Character Count Alert Updating
-      const targetCharCounter = document.getElementById(
-        `charCounterLimit_${tileId}`
-      );
-      if (targetCharCounter && charCount >= 130) {
-        targetCharCounter.style.color = "red"; // Set alert text color
-      } else targetCharCounter.style.color = "inherit"; // Revert to correct font-color
-
-      // Return the updated array to be set as the new state
-      return updatedArrTiles;
+  //  ------------------ Update
+  const handleChange = (event, tileId) => {
+    const newText = event.target.value; // User input
+    const updatedTiles = arrTiles.map((tile) => {
+      // Update tile title or description only if it matches the tileId
+      return tile.id === tileId
+        ? {
+            ...tile,
+            [event.target.name]: newText, // Updates the Title or Description field with user input
+            updatedAt: new Date().toLocaleTimeString(),
+          }
+        : tile;
     });
-  };
-  // Function to update Title in state onChange to prep for Sorting Titles Alphabetically
-  const handleTitleChange = (event, tileId) => {
-    const newText = event.target.value;
-    setArrTiles((prevArrTiles) => {
-      // Create a copy of the previous array
-      const updatedArrTiles = [...prevArrTiles];
-      // Update the titleValue property of the specific tile   ---- Title Updating
-      updatedArrTiles[tileId - 1].titleValue = newText;
-      // Update the createdAt property of the specific tile   ---- Time Stamp Updating
-      updatedArrTiles[
-        tileId - 1
-      ].createdAt = `Updated at: ${new Date().toLocaleTimeString()}`;
-      // Animate the text color change   ---- Time Stamp Alert Updating
-      const targetTimeStamp = document.getElementById(`timeStamp_${tileId}`);
-      if (targetTimeStamp) {
-        targetTimeStamp.style.transition = "background-color 2s ease-in-out"; // Set transition properties
-        targetTimeStamp.style.backgroundColor = "yellow"; // Initial color before animation
-        setTimeout(() => {
-          targetTimeStamp.style.backgroundColor = "initial"; // Final color after animation
-        }, 1500); // Matches the transition duration
-      }
-      // Return the updated array to be set as the new state
-      return updatedArrTiles;
-    });
+    setArrTiles(updatedTiles); // Update state with the modified tiles array
+    setIsTimestampAnimating(true); // Activites highlighting of the time stamp
   };
 
-  // Delete
+  // ------------------ Delete
   const handleDeleteTile = (tileId) => {
     const updatedTiles = arrTiles.filter((tile) => tile.id !== tileId);
     setArrTiles(updatedTiles);
   };
 
-  // Sorting Functions ---------------------------
-  const handleSortAZ = () => {
+  // ------------------ Sorting Functions
+
+  // Toggle functions for Alphabetical and Date sorting Ascending and Descending
+  const toggleSortAlphaDirection = () =>
+    setSortAlphaDirection(!sortAlphaDirection); // true = ascending, false = descending
+  const toggleSortDateDirection = () =>
+    setSortDateDirection(!sortDateDirection); // true = ascending, false = descending
+
+  const handleSort = (sortBy, sortOrder) => {
+    // Checks whether Alphabeting or Date sorting button is being called and updates sorting direction
+    if (sortBy == "title") {
+      toggleSortAlphaDirection();
+    } else if (sortBy == "updatedAt") {
+      toggleSortDateDirection();
+    }
+
+    // Executes sorting functionality
     setArrTiles((prevArrTiles) => {
       const sortedArrTiles = [...prevArrTiles];
-      if (sortAz == true) {
-        setSortAz(false);
-        // Sort the array by title in descending order (A-Z)
-        sortedArrTiles.sort((a, b) => {
-          if (a.titleValue > b.titleValue) return -1;
-          if (a.titleValue < b.titleValue) return 1;
-          return 0;
-        });
-      } else {
-        setSortAz(true);
-        // Sort the array by title in ascending order (A-Z)
-        sortedArrTiles.sort((a, b) => {
-          if (a.titleValue < b.titleValue) return -1;
-          if (a.titleValue > b.titleValue) return 1;
-          return 0;
-        });
-      }
-      return sortedArrTiles;
-    });
-  };
-  const handleSort09 = () => {
-    setArrTiles((prevArrTiles) => {
-      const sortedArrTiles = [...prevArrTiles];
-      if (sortDate == true) {
-        setSortDate(false);
-        // Sort the array by Time in descending order (A-Z)
-        sortedArrTiles.sort((a, b) => {
-          if (a.createdAt > b.createdAt) return -1;
-          if (a.createdAt < b.createdAt) return 1;
-          return 0;
-        });
-      } else {
-        setSortDate(true);
-        // Sort the array by Time in ascending order (A-Z)
-        sortedArrTiles.sort((a, b) => {
-          if (a.createdAt < b.createdAt) return -1;
-          if (a.createdAt > b.createdAt) return 1;
-          return 0;
-        });
-      }
+
+      const sortFunction = (a, b) => {
+        if (a[sortBy] > b[sortBy]) return sortOrder ? -1 : 1;
+        if (a[sortBy] < b[sortBy]) return sortOrder ? 1 : -1;
+        return 0;
+      };
+
+      sortedArrTiles.sort(sortFunction);
       return sortedArrTiles;
     });
   };
 
-  //  ------------------------------------------------------
+  //  -------------------------------------------------------------------------------------------------------
+
   return (
     <div>
       <div
@@ -188,7 +130,7 @@ function App() {
         >
           {" "}
           <button
-            onClick={handleSortAZ}
+            onClick={() => handleSort("title", sortAlphaDirection)}
             css={css`
               border-radius: 1em 0 0 1em;
             `}
@@ -196,7 +138,7 @@ function App() {
             Sort A-Z
           </button>
           <button
-            onClick={handleSort09}
+            onClick={() => handleSort("updatedAt", sortDateDirection)}
             css={css`
               border-radius: 0 1em 1em 0;
             `}
@@ -240,30 +182,32 @@ function App() {
                     <input
                       type="text"
                       placeholder="Title"
-                      onChange={(event) => handleTitleChange(event, tile.id)}
+                      name="title"
+                      value={tile.title}
+                      onChange={(event) => handleChange(event, tile.id)}
                       css={css`
                         border: none;
                         border-radius: 1em;
                         padding: 0.5em;
                       `}
                       autoFocus
-                    ></input>
+                    />
 
                     <textarea
                       type="text"
                       placeholder="Description"
+                      name="description"
                       cols={35}
                       rows={5}
                       maxLength="140"
-                      onChange={(event) =>
-                        handleDescriptionChange(event, tile.id)
-                      }
+                      value={tile.description}
+                      onChange={(event) => handleChange(event, tile.id)}
                       css={css`
                         border: none;
                         border-radius: 1em;
                         padding: 0.5em;
                       `}
-                    ></textarea>
+                    />
 
                     <div
                       css={css`
@@ -274,22 +218,26 @@ function App() {
                     >
                       {" "}
                       <p
-                        id={`timeStamp_${tile.id}`}
                         css={css`
                           font-size: 0.5rem;
                           color: gray;
+						  background-color: ${isTimestampAnimating ? "yellow" : "initial"}}
+						    // transition: background-color 1s ease-in-out;
                         `}
                       >
-                        {tile.createdAt}
+                        {tile.updatedAt != "" ? tile.updatedAt : tile.createdAt}
                       </p>
                       <p
-                        id={`charCounterLimit_${tile.id}`}
                         css={css`
                           font-size: 0.5rem;
-                          color: gray;
+                          color: ${arrTiles[tile.id - 1].description.length +
+                            1 >=
+                          130
+                            ? "red"
+                            : "gray"};
                         `}
                       >
-                        {tile.textLength} / 140
+                        {tile.description.length} / 140
                       </p>
                     </div>
 
