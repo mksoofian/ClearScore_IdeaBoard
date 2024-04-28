@@ -13,30 +13,31 @@ function App() {
   //  Resets the Highlighting animation of the handleChange function
   useEffect(() => {
     if (isTimestampAnimating) {
-      console.log(isTimestampAnimating);
       const timeoutId = setTimeout(() => setIsTimestampAnimating(false), 1000);
       return () => clearTimeout(timeoutId);
     }
   }, [isTimestampAnimating]); // Only run when isTimestampAnimating changes
 
   // Local Storage API (NOT WORKING)
-  //   // Load data from localStorage on initial render
-  //   useEffect(() => {
-  //     const storedTiles = JSON.parse(localStorage.getItem("arrTiles"));
-  //     if (storedTiles) {
-  //       setArrTiles(storedTiles);
-  //       console.log(
-  //         `Stored Tiles! ${JSON.stringify(localStorage.getItem("arrTiles"))}`
-  //       );
-  //     }
-  //   }, []);
-  //   // Save the updated tiles to local storage whenever arrTiles changes
-  //   useEffect(() => {
-  //     localStorage.setItem("arrTiles", JSON.stringify(arrTiles));
-  //     console.log(
-  //       `Setting arrTiles ${JSON.stringify(localStorage.getItem("arrTiles"))}`
-  //     );
-  //   }, [arrTiles]);
+  // Load data from localStorage on initial render
+  useEffect(() => {
+    const storedTiles = JSON.parse(localStorage.getItem("arrTiles"));
+    if (storedTiles) {
+      setArrTiles(storedTiles);
+      console.log(
+        `Stored Tiles! ${JSON.stringify(localStorage.getItem("arrTiles"))}`
+      );
+    }
+  }, []);
+  // Save the updated tiles to local storage whenever arrTiles changes
+  useEffect(() => {
+    if (arrTiles.length > 0) {
+      localStorage.setItem("arrTiles", JSON.stringify(arrTiles));
+      console.log(
+        `Setting arrTiles ${JSON.stringify(localStorage.getItem("arrTiles"))}`
+      );
+    }
+  }, [arrTiles]);
 
   // ---------------------------------- CRUD Operations and Handlers -----------------------------------
   // ------------------ Create
@@ -68,7 +69,7 @@ function App() {
         : tile;
     });
     setArrTiles(updatedTiles); // Update state with the modified tiles array
-    setIsTimestampAnimating(true); // Activites highlighting of the time stamp
+    setIsTimestampAnimating(tileId); // Activites highlighting of the time stamp
   };
 
   // ------------------ Delete
@@ -79,18 +80,12 @@ function App() {
 
   // ------------------ Sorting Functions
 
-  // Toggle functions for Alphabetical and Date sorting Ascending and Descending
-  const toggleSortAlphaDirection = () =>
-    setSortAlphaDirection(!sortAlphaDirection); // true = ascending, false = descending
-  const toggleSortDateDirection = () =>
-    setSortDateDirection(!sortDateDirection); // true = ascending, false = descending
-
   const handleSort = (sortBy, sortOrder) => {
     // Checks whether Alphabeting or Date sorting button is being called and updates sorting direction
     if (sortBy == "title") {
-      toggleSortAlphaDirection();
+      setSortAlphaDirection(!sortAlphaDirection); // true = ascending, false = descending
     } else if (sortBy == "updatedAt") {
-      toggleSortDateDirection();
+      setSortDateDirection(!sortDateDirection); // true = ascending, false = descending
     }
 
     // Executes sorting functionality
@@ -157,7 +152,7 @@ function App() {
           justify-content: space-evenly;
         `}
       >
-        {arrTiles.map((tile) => (
+        {arrTiles?.map((tile) => (
           <li
             key={tile.id}
             css={css`
@@ -221,7 +216,7 @@ function App() {
                         css={css`
                           font-size: 0.5rem;
                           color: gray;
-						  background-color: ${isTimestampAnimating ? "yellow" : "initial"}}
+						  background-color: ${isTimestampAnimating == tile.id ? "yellow" : "initial"}}
 						    // transition: background-color 1s ease-in-out;
                         `}
                       >
@@ -230,9 +225,7 @@ function App() {
                       <p
                         css={css`
                           font-size: 0.5rem;
-                          color: ${arrTiles[tile.id - 1].description.length +
-                            1 >=
-                          130
+                          color: ${tile.description.length >= 130
                             ? "red"
                             : "gray"};
                         `}
